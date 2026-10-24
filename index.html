@@ -1,0 +1,2025 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siete meses, un solo corazón - Nuestra Historia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- JSZip para descomprimir las 7 fotos, los fondos numerados (1-2, 3-4) y sin numerar, y Moments.mp3 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Dancing+Script:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --paper-bg: #fdf8f2;
+            --paper-edge: #e6dac8;
+            --gold-foil: #d4af37;
+            --pastel-strength: 0.82;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 35%, #2b1929 0%, #150b16 55%, #08040a 100%);
+            font-family: 'Cormorant Garamond', serif;
+            color: #2c1e18;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .desk-surface {
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(255, 204, 153, 0.12) 0%, transparent 68%),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.01) 0px, rgba(255,255,255,0.01) 2px, transparent 2px, transparent 16px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 3D Scene Viewport */
+        .scene-viewport {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            perspective: 2600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        .book-stage {
+            position: relative;
+            width: 1040px;
+            height: 660px;
+            transform-style: preserve-3d;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .book-base-shadow {
+            position: absolute;
+            inset: -30px;
+            background: rgba(0, 0, 0, 0.82);
+            filter: blur(40px);
+            transform: translateZ(-32px);
+            border-radius: 28px;
+            pointer-events: none;
+            transition: all 0.8s ease;
+        }
+
+        .book-spine {
+            position: absolute;
+            left: 50%;
+            top: -8px;
+            bottom: -8px;
+            width: 42px;
+            margin-left: -21px;
+            background: linear-gradient(90deg, #380e1b 0%, #6b1d36 30%, #8a2a49 50%, #6b1d36 70%, #380e1b 100%);
+            transform: translateZ(-12px);
+            border-radius: 6px;
+            box-shadow: inset 0 0 12px rgba(0,0,0,0.8);
+            z-index: 5;
+        }
+
+        /* Center Crease Shadow for Pop-Up Realism */
+        .center-crease-shadow {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 64px;
+            margin-left: -32px;
+            background: linear-gradient(90deg, transparent 0%, rgba(58, 35, 22, 0.24) 48%, rgba(35, 18, 10, 0.44) 50%, rgba(58, 35, 22, 0.24) 52%, transparent 100%);
+            transform: translateZ(2px);
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        .ribbon-bookmark {
+            position: absolute;
+            left: 50%;
+            bottom: -70px;
+            width: 24px;
+            height: 120px;
+            margin-left: -12px;
+            background: linear-gradient(90deg, #881337, #be123c, #881337);
+            transform: translateZ(-15px) rotate(-4deg);
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+            box-shadow: 0 10px 18px rgba(0,0,0,0.5);
+            z-index: 2;
+        }
+
+        /* Spread Container - Persistent Open State */
+        .spread {
+            position: absolute;
+            inset: 0;
+            transform-style: preserve-3d;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.55s ease, visibility 0.55s ease;
+        }
+
+        .spread.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .spread.closing {
+            opacity: 0;
+            visibility: visible;
+            pointer-events: none;
+            transition: opacity 0.45s ease 0.15s, visibility 0.5s ease;
+        }
+
+        /* Left & Right Pages */
+        .page-half {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 50%;
+            background: var(--paper-bg);
+            background-image: 
+                radial-gradient(rgba(189, 155, 116, 0.08) 1px, transparent 0),
+                linear-gradient(to right, rgba(215, 195, 170, 0.25) 0%, rgba(253, 248, 240, 0) 15%, rgba(253, 248, 240, 0) 85%, rgba(215, 195, 170, 0.3) 100%);
+            background-size: 22px 22px, 100% 100%;
+            transform-style: preserve-3d;
+            border: 1px solid #dccbb5;
+        }
+
+        .page-left {
+            left: 0;
+            border-radius: 14px 3px 3px 14px;
+            transform-origin: right center;
+            box-shadow: 
+                inset -28px 0 40px -15px rgba(92, 61, 46, 0.22),
+                -6px 6px 0 #ebe0d0,
+                -12px 12px 0 #d8c8b2,
+                -15px 18px 30px rgba(0,0,0,0.45);
+        }
+
+        .page-right {
+            right: 0;
+            border-radius: 3px 14px 14px 3px;
+            transform-origin: left center;
+            box-shadow: 
+                inset 28px 0 40px -15px rgba(92, 61, 46, 0.22),
+                6px 6px 0 #ebe0d0,
+                12px 12px 0 #d8c8b2,
+                15px 18px 30px rgba(0,0,0,0.45);
+        }
+
+        .page-ornament {
+            position: absolute;
+            inset: 14px;
+            border: 1.5px solid rgba(180, 142, 92, 0.38);
+            border-radius: 6px;
+            pointer-events: none;
+        }
+        .page-ornament::before {
+            content: '';
+            position: absolute;
+            inset: 4px;
+            border: 0.5px dashed rgba(180, 142, 92, 0.32);
+            border-radius: 4px;
+        }
+
+        /* =========================================================
+           ORIGINAL TWO-PAGE EDITORIAL TEXT LAYOUT (TOP HALF OF BOTH PAGES)
+           Elevated in Z-space so background cutouts NEVER cover text
+           ========================================================= */
+        .page-text-top-left {
+            position: absolute;
+            top: 24px;
+            left: 26px;
+            right: 26px;
+            z-index: 40;
+            transform: translateZ(38px);
+            pointer-events: auto;
+        }
+
+        .page-text-top-right {
+            position: absolute;
+            top: 24px;
+            left: 26px;
+            right: 26px;
+            z-index: 40;
+            transform: translateZ(38px);
+            pointer-events: auto;
+        }
+
+        .story-card {
+            position: relative;
+            background: rgba(255, 252, 247, 0.96);
+            border: 1px solid #decbb4;
+            border-radius: 10px;
+            padding: 13px 18px;
+            box-shadow: 
+                0 3px 0 #e3d5c1,
+                0 10px 22px rgba(68, 42, 24, 0.12);
+        }
+
+        .page-footer-note {
+            position: absolute;
+            bottom: 18px;
+            left: 30px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 40;
+            transform: translateZ(35px);
+            pointer-events: auto;
+        }
+
+        /* =========================================================
+           PERSISTENT 3D POP-UP STAGE IN THE LOWER/CENTER HALF
+           Constrained height & Z so landscapes NEVER overlap top text
+           ========================================================= */
+        .popup-stage {
+            position: absolute;
+            inset: 0;
+            transform-style: preserve-3d;
+            pointer-events: none;
+            z-index: 25;
+        }
+
+        .popup-layer {
+            position: absolute;
+            transform-origin: bottom center;
+            transform-style: preserve-3d;
+            transform: translate3d(var(--tx, 0px), var(--ty, 0px), var(--tz, 0px)) 
+                       rotateY(var(--ry, 0deg)) 
+                       rotateZ(var(--rz, 0deg)) 
+                       rotateX(-89deg) 
+                       scaleY(0.08);
+            opacity: 0;
+            will-change: transform, opacity;
+            transition: 
+                transform 0.95s cubic-bezier(0.20, 1.08, 0.32, 1),
+                opacity 0.35s ease;
+            transition-delay: var(--delay, 0.06s);
+            filter: drop-shadow(0 14px 14px rgba(28, 14, 8, 0.35));
+        }
+
+        /* Landscapes stay open and upright permanently while on the page */
+        .spread.active .popup-layer {
+            transform: translate3d(var(--tx, 0px), var(--ty, 0px), var(--tz, 0px)) 
+                       rotateY(var(--ry, 0deg)) 
+                       rotateZ(var(--rz, 0deg)) 
+                       rotateX(var(--rx-open, -5deg)) 
+                       scaleY(1);
+            opacity: 1;
+        }
+
+        /* Fold down ONLY when turning the page */
+        .spread.closing .popup-layer {
+            transform: translate3d(var(--tx, 0px), var(--ty, 0px), var(--tz, 0px)) 
+                       rotateY(var(--ry, 0deg)) 
+                       rotateZ(var(--rz, 0deg)) 
+                       rotateX(-89deg) 
+                       scaleY(0.08);
+            opacity: 0;
+            transition: transform 0.42s cubic-bezier(0.55, 0.05, 0.68, 0.19), opacity 0.35s ease;
+            transition-delay: 0s;
+        }
+
+        /* Realistic 3D Fold Tab at Base of Pop-Up Cutouts */
+        .popup-layer::after {
+            content: '';
+            position: absolute;
+            bottom: -9px;
+            left: 12%;
+            right: 12%;
+            height: 11px;
+            background: linear-gradient(90deg, rgba(186,158,125,0.45), rgba(235,222,204,0.8), rgba(186,158,125,0.45));
+            transform-origin: top center;
+            transform: rotateX(88deg);
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        /* Die-Cut Photographic Landscape Layer (Thick cream paper edge around real photos) */
+        .scenic-photo-cutout {
+            width: 100%;
+            height: 100%;
+            background: #fffdf9;
+            padding: 6px 6px 0 6px;
+            box-shadow: 0 3px 0 #dfd3c3;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .scenic-photo-cutout img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            filter: 
+                brightness(calc(1 + 0.05 * var(--pastel-strength))) 
+                contrast(calc(1 - 0.08 * var(--pastel-strength))) 
+                saturate(calc(1 - 0.12 * var(--pastel-strength))) 
+                sepia(calc(0.06 * var(--pastel-strength)));
+        }
+
+        .scenic-photo-cutout::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255,245,238,0.14) 0%, rgba(253,242,248,0.10) 60%, rgba(44,30,24,0.14) 100%);
+            pointer-events: none;
+        }
+
+        /* Arch & Wing Die-Cut Shapes for Landscape Photographs */
+        .cutout-arch {
+            border-radius: 220px 220px 8px 8px;
+        }
+        .cutout-arch img {
+            border-radius: 214px 214px 4px 4px;
+        }
+
+        .cutout-wing-left {
+            border-radius: 95px 24px 8px 8px;
+        }
+        .cutout-wing-left img {
+            border-radius: 89px 18px 4px 4px;
+        }
+
+        .cutout-wing-right {
+            border-radius: 24px 95px 8px 8px;
+        }
+        .cutout-wing-right img {
+            border-radius: 18px 89px 4px 4px;
+        }
+
+        /* =========================================================
+           LARGE, UNCROPPED 3D POLAROID PHOTO FRAMES + PASTEL FILTER
+           ========================================================= */
+        .polaroid-card {
+            pointer-events: auto;
+            background: #fffdf9;
+            padding: 10px 10px 34px 10px;
+            border-radius: 6px;
+            border: 1px solid #e2d9c8;
+            box-shadow: 
+                0 4px 0 #dcd0be,
+                0 18px 32px rgba(0,0,0,0.38);
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+            position: relative;
+        }
+
+        .polaroid-card:hover {
+            transform: translateY(-5px) scale(1.03);
+            box-shadow: 
+                0 6px 0 #dcd0be,
+                0 24px 38px rgba(0,0,0,0.46);
+        }
+
+        .polaroid-tape {
+            position: absolute;
+            top: -9px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-2deg);
+            width: 64px;
+            height: 18px;
+            background: rgba(247, 235, 205, 0.85);
+            border-left: 1px dashed rgba(180, 160, 120, 0.45);
+            border-right: 1px dashed rgba(180, 160, 120, 0.45);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            z-index: 4;
+        }
+
+        /* Complete Uncropped Photo Container */
+        .polaroid-img-wrap {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 50%, #fbf5ef 0%, #f2e6d8 100%);
+            position: relative;
+            border: 1px solid #ebe3d5;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* object-fit: contain guarantees 100% of the photo is visible without cutting faces or edges */
+        .polaroid-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            padding: 2px;
+            transition: transform 0.45s ease, filter 0.35s ease;
+            filter: 
+                brightness(calc(1 + 0.07 * var(--pastel-strength))) 
+                contrast(calc(1 - 0.11 * var(--pastel-strength))) 
+                saturate(calc(1 - 0.16 * var(--pastel-strength))) 
+                sepia(calc(0.09 * var(--pastel-strength)));
+        }
+
+        /* Soft Pastel Rose-Cream Overlay */
+        .polaroid-img-wrap::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                linear-gradient(135deg, rgba(255, 236, 230, 0.22) 0%, rgba(252, 231, 243, 0.18) 50%, rgba(254, 249, 195, 0.16) 100%),
+                radial-gradient(circle at 50% 50%, transparent 62%, rgba(245, 230, 216, 0.30) 100%);
+            opacity: var(--pastel-strength);
+            mix-blend-mode: screen;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .polaroid-caption {
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.08rem;
+            color: #4a3525;
+            text-align: center;
+            margin-top: 6px;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Hardcover Front */
+        .cover-card {
+            position: absolute;
+            width: 490px;
+            height: 660px;
+            left: 50%;
+            top: 0px;
+            margin-left: -245px;
+            background: radial-gradient(circle at 30% 25%, #7c2340 0%, #4a1224 70%, #2d0915 100%);
+            border-radius: 8px 18px 18px 8px;
+            border: 2px solid #8a6421;
+            box-shadow: 
+                -10px 0 0 #2b0914,
+                0 25px 50px rgba(0,0,0,0.85),
+                inset 0 0 40px rgba(0,0,0,0.6);
+            transform-style: preserve-3d;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 44px 36px;
+            pointer-events: auto;
+        }
+
+        .gold-foil-text {
+            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6));
+        }
+
+        .gold-border-frame {
+            position: absolute;
+            inset: 18px;
+            border: 2px solid #d4af37;
+            border-radius: 4px 12px 12px 4px;
+            box-shadow: inset 0 0 0 4px rgba(74, 18, 36, 0.9), inset 0 0 0 5px rgba(212, 175, 55, 0.5);
+            pointer-events: none;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.55)); }
+            50% { filter: drop-shadow(0 0 16px rgba(251, 191, 36, 0.9)); }
+        }
+        .glow-anim {
+            animation: pulseGlow 3.2s ease-in-out infinite;
+        }
+
+        /* Drag & Drop ZIP Overlay */
+        #dropZoneOverlay {
+            transition: opacity 0.25s ease;
+        }
+
+        @media (max-width: 1100px) {
+            .book-stage { transform: scale(0.75); }
+        }
+        @media (max-width: 768px) {
+            .book-stage { transform: scale(0.50); }
+        }
+        @media (max-width: 480px) {
+            .book-stage { transform: scale(0.35); }
+        }
+    </style>
+</head>
+<body class="select-none">
+
+    <!-- Drag & Drop .ZIP Fullscreen Overlay -->
+    <div id="dropZoneOverlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-stone-950/90 backdrop-blur-md border-4 border-dashed border-amber-400 m-4 rounded-3xl pointer-events-none">
+        <div class="text-center p-8" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+            <h2 class="text-2xl sm:text-3xl font-bold text-amber-300 mb-2">Suelta tu archivo .ZIP aquí</h2>
+            <p class="text-amber-100/80 text-sm">Se cargarán tus 7 fotos, los paisajes de fondo (1-2 juntos, 3-4 juntos y el resto) y tu canción</p>
+        </div>
+    </div>
+
+    <!-- Starry & Firefly Particle Canvas -->
+    <canvas id="fireflyCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+    <div class="desk-surface"></div>
+
+    <!-- Audio Element ONLY for User's Imported Song -->
+    <audio id="customSongAudio" loop preload="auto"></audio>
+
+    <!-- Hidden File Input for .ZIP -->
+    <input type="file" id="zipFileInput" accept=".zip,application/zip" class="hidden" onchange="handleZipUpload(event)">
+
+    <!-- =========================================================
+         TOP FLOATING HUD BAR (NO EMOJIS, NO PERSONALIZAR BUTTON)
+         ========================================================= -->
+    <header class="fixed top-0 left-0 right-0 z-40 px-3 sm:px-5 py-2.5 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+        <!-- Left Brand / Anniversary Pill -->
+        <div class="pointer-events-auto flex items-center gap-3 bg-stone-950/85 backdrop-blur-md border border-amber-500/30 px-4 py-1.5 rounded-full shadow-lg">
+            <div class="w-2 h-2 rounded-full bg-amber-400"></div>
+            <div>
+                <h1 class="text-amber-100 text-xs font-bold tracking-wider uppercase" style="font-family: 'Cinzel Decorative', serif;">
+                    Siete Meses
+                </h1>
+                <p id="pageIndicatorText" class="text-amber-300/80 text-[11px]" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                    Portada del Libro
+                </p>
+            </div>
+        </div>
+
+        <!-- Right Controls -->
+        <div class="pointer-events-auto flex items-center gap-1.5 sm:gap-2 flex-wrap" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+            <!-- Direct .ZIP Loader Button -->
+            <button onclick="document.getElementById('zipFileInput').click()" id="zipLoaderBtn"
+                class="bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-400 hover:to-amber-400 text-stone-950 font-bold px-3.5 py-1.5 rounded-full text-xs flex items-center gap-1.5 shadow-lg transition transform hover:scale-105"
+                title="Sube tu archivo .ZIP con las 7 fotos, los fondos y la canción">
+                <span id="zipBtnLabel">Importar .ZIP</span>
+            </button>
+
+            <!-- Camera Preset Switcher -->
+            <div class="bg-stone-950/85 backdrop-blur-md border border-amber-500/30 rounded-full p-0.5 flex items-center text-[11px] text-amber-100">
+                <button onclick="setCameraPreset('iso')" id="camBtn-iso" class="px-2.5 py-1 rounded-full bg-amber-600/80 text-white font-medium transition">
+                    Vista 3D
+                </button>
+                <button onclick="setCameraPreset('front')" id="camBtn-front" class="px-2.5 py-1 rounded-full hover:bg-white/10 transition">
+                    Lectura
+                </button>
+                <button onclick="setCameraPreset('deep')" id="camBtn-deep" class="px-2.5 py-1 rounded-full hover:bg-white/10 transition hidden md:inline-block">
+                    Relieve
+                </button>
+            </div>
+
+            <!-- Imported Song Toggle -->
+            <button onclick="toggleImportedMusic()" id="musicBtn" title="Reproducir o pausar únicamente la canción importada"
+                class="bg-stone-950/85 hover:bg-stone-900 backdrop-blur-md border border-amber-500/30 text-amber-200 px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-lg transition">
+                <span id="musicLabel" class="max-w-[160px] truncate">Canción: Sin importar</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Status Toast Notification -->
+    <div id="toastBanner" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 hidden bg-emerald-950/95 border border-emerald-400/50 text-emerald-100 px-5 py-2.5 rounded-full shadow-2xl text-xs font-medium items-center gap-2" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+        <span id="toastText">Archivo cargado con éxito</span>
+    </div>
+
+    <!-- =========================================================
+         MAIN 3D VIEWPORT & POP-UP BOOK (COVER + 7 MONTHS SPREADS)
+         ========================================================= -->
+    <main class="scene-viewport" id="sceneViewport">
+        <div class="book-stage" id="bookStage">
+            <div class="book-base-shadow" id="bookShadow"></div>
+            <div class="book-spine" id="bookSpine" style="display: none;"></div>
+            <div class="center-crease-shadow" id="centerCrease" style="display: none;"></div>
+            <div class="ribbon-bookmark" id="bookRibbon"></div>
+
+            <!-- =========================================================
+                 SPREAD 0: PORTADA DE LUJO
+                 ========================================================= -->
+            <section class="spread active" data-spread="0">
+                <div class="cover-card" style="transform: translateZ(15px);">
+                    <div class="gold-border-frame"></div>
+
+                    <div class="text-center z-10 mt-2">
+                        <span class="text-xs uppercase tracking-[0.35em] text-amber-300/80 block mb-2" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                            Edición Especial Pop-Up
+                        </span>
+                        <div class="w-24 h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto"></div>
+                    </div>
+
+                    <div class="text-center z-10 px-4 my-auto">
+                        <div class="w-28 h-28 mx-auto mb-5 flex items-center justify-center relative">
+                            <svg viewBox="0 0 120 120" class="w-full h-full glow-anim">
+                                <defs>
+                                    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#f9e29c"/>
+                                        <stop offset="50%" stop-color="#d4af37"/>
+                                        <stop offset="100%" stop-color="#9a7418"/>
+                                    </linearGradient>
+                                </defs>
+                                <circle cx="60" cy="60" r="52" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-dasharray="4 3"/>
+                                <circle cx="60" cy="60" r="44" fill="rgba(45,9,21,0.7)" stroke="url(#goldGrad)" stroke-width="1.5"/>
+                                <path d="M60 88 C60 88 28 66 28 45 C28 33 38 26 48 26 C55 26 60 32 60 36 C60 32 65 26 72 26 C82 26 92 33 92 45 C92 66 60 88 60 88 Z" fill="url(#goldGrad)"/>
+                                <text x="60" y="61" text-anchor="middle" fill="#3a0d1c" font-family="Cinzel Decorative" font-weight="bold" font-size="22">7M</text>
+                            </svg>
+                        </div>
+
+                        <h2 class="gold-foil-text text-3xl sm:text-4xl font-bold leading-tight mb-3" style="font-family: 'Cinzel Decorative', serif;">
+                            Siete meses, un solo corazón
+                        </h2>
+                        <p class="text-amber-200/95 text-2xl italic" style="font-family: 'Dancing Script', cursive;">
+                            La historia más bonita: la nuestra
+                        </p>
+                    </div>
+
+                    <div class="z-10 text-center mb-2">
+                        <button onclick="goToSpread(1)" class="px-8 py-3 rounded-full bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 text-stone-950 font-bold text-xs tracking-widest uppercase shadow-xl hover:scale-105 active:scale-95 transition flex items-center gap-2 mx-auto" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                            <span>Abrir Nuestro Libro</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========================================================
+                 SPREAD 1: CAPÍTULO I (FOTO 1 + FONDOS 1 Y 2 EN LA MISMA PÁGINA)
+                 ========================================================= -->
+            <section class="spread" data-spread="1">
+                <!-- Left Page: Top Story Card + Footer -->
+                <div class="page-half page-left">
+                    <div class="page-ornament"></div>
+                    <div class="page-text-top-left">
+                        <div class="flex items-center justify-between border-b border-amber-800/20 pb-1.5 mb-2.5">
+                            <span class="text-[10px] uppercase tracking-[0.25em] text-amber-900 font-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                Capítulo I • El Comienzo
+                            </span>
+                            <span class="text-xs font-bold text-stone-800" style="font-family: 'Cinzel Decorative', serif;">
+                                Nuestra Historia
+                            </span>
+                        </div>
+                        <div class="story-card">
+                            <p class="text-[15.5px] text-stone-800 leading-relaxed">
+                                Hace siete meses comenzó una de las historias más bonitas de mi vida: nuestra historia, mi amorcito. Lo que empezó con mensajes, conversaciones y pequeñas muestras de cariño se convirtió poco a poco en algo mucho más grande.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="page-footer-note">
+                        <span class="text-xl text-rose-900" style="font-family: 'Dancing Script', cursive;">Siete meses, un solo corazón</span>
+                        <span class="text-[11px] text-stone-500 font-semibold" style="font-family: 'Plus Jakarta Sans', sans-serif;">Pág. 1</span>
+                    </div>
+                </div>
+
+                <!-- Right Page: Top Story Card + Footer -->
+                <div class="page-half page-right">
+                    <div class="page-ornament"></div>
+                    <div class="page-text-top-right">
+                        <div class="flex items-center justify-between border-b border-amber-800/20 pb-1.5 mb-2.5">
+                            <span class="text-[10px] uppercase tracking-[0.25em] text-amber-900 font-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                Mi Personita Especial
+                            </span>
+                            <span class="text-[11px] text-stone-500 font-semibold" style="font-family: 'Plus Jakarta Sans', sans-serif;">I / VII</span>
+                        </div>
+                        <div class="story-card">
+                            <p class="text-[15.5px] text-stone-800 leading-relaxed">
+                                Sin darme cuenta, te fuiste convirtiendo en esa personita especial que alegra mis días, que aparece en mis pensamientos sin avisar y que consigue sacarme una sonrisa incluso cuando las cosas no van tan bien.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="page-footer-note justify-end">
+                        <span class="text-xl text-rose-900" style="font-family: 'Dancing Script', cursive;">La historia más bonita: la nuestra</span>
+                    </div>
+                </div>
+
+                <!-- 3D POP-UP STAGE 1 (LOWER HALF: FONDOS 1 Y 2 JUNTOS EN ESTA PÁGINA + FOTO 1) -->
+                <div class="popup-stage">
+                    <!-- Fondo 1 (Left Pop-Up Landscape Wing) -->
+                    <div class="popup-layer" style="left: 55px; bottom: 52px; width: 340px; height: 220px; --tz: 18px; --ry: 9deg; --rx-open: -5deg; --delay: 0.06s;">
+                        <div class="scenic-photo-cutout cutout-wing-left">
+                            <img id="bg-s1-left" src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=900&q=85" alt="Paisaje 1">
+                        </div>
+                    </div>
+
+                    <!-- Fondo 2 (Right Pop-Up Landscape Wing - Together on Spread 1) -->
+                    <div class="popup-layer" style="right: 55px; bottom: 52px; width: 340px; height: 220px; --tz: 18px; --ry: -9deg; --rx-open: -5deg; --delay: 0.12s;">
+                        <div class="scenic-photo-cutout cutout-wing-right">
+                            <img id="bg-s1-right" src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=900&q=85" alt="Paisaje 2">
+                        </div>
+                    </div>
+
+                    <!-- Center Pop-Up Polaroid: Photo 1 (Complete & Uncropped) -->
+                    <div class="popup-layer" style="left: 380px; bottom: 32px; width: 280px; height: 325px; --tz: 70px; --rx-open: -6deg; --rz: -1.2deg; --delay: 0.20s;">
+                        <div class="polaroid-card w-full h-full">
+                            <div class="polaroid-tape"></div>
+                            <div class="polaroid-img-wrap">
+                                <img id="img-photo1" src="" alt="Fotografía 1">
+                            </div>
+                            <p class="polaroid-caption">Nuestra historia, mi amorcito</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========================================================
+                 SPREAD 2: CAPÍTULO II (FOTO 2 + FONDOS 3 Y 4 EN LA MISMA PÁGINA)
+                 ========================================================= -->
+            <section class="spread" data-spread="2">
+                <!-- Left Page -->
+                <div class="page-half page-left">
+                    <div class="page-ornament"></div>
+                    <div class="page-text-top-left">
+                        <div class="flex items-center justify-between border-b border-indigo-900/20 pb-1.5 mb-2.5">
+                            <span class="text-[10px] uppercase tracking-[0.25em] text-indigo-950 font-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                Capítulo II • Nuestros Refugios
+                            </span>
+                            <span class="text-xs font-bold text-stone-800" style="font-family: 'Cinzel Decorative', serif;">
+                                Planes Juntos
+                            </span>
+                        </div>
+                        <div class="story-card">
+                            <p class="text-[15.5px] text-stone-800 leading-relaxed">
+                                Con el tiempo, nuestras conversaciones se volvieron pequeños refugios, nuestras llamadas se convirtieron en momentos que no quería que terminaran y nuestros sueños comenzaron a llenarse de planes juntos.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="page-footer-note">
+                        <span class="text-xl text-indigo-950" style="font-family: 'Dancing Script', cursive;">Pequeños refugios en cada llamada</span>
+                        <span class="text-[11px] text-stone-500 font-semibold" style="font-family: 'Plus Jakarta Sans', sans-serif;">Pág. 2</span>
+                    </div>
+                </div>
+
+                <!-- Right Page -->
+                <div class="page-half page-right">
+                    <div class="page-ornament"></div>
+                    <div class="page-text-top-right">
+                        <div class="flex items-center justify-between border-b border-indigo-900/20 pb-1.5 mb-2.5">
+                            <span class="text-[10px] uppercase tracking-[0.25em] text-indigo-950 font-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                Sentirnos Cerca
+                            </span>
+                            <span class="text-[11px] text-stone-500 font-semibold" style="font-family: 'Plus Jakarta Sans', sans-serif;">II / VII</span>
+                        </div>
+                        <div class="story-card">
+                            <p class="text-[15.5px] text-stone-800 leading-relaxed">
+                                Aunque la distancia no siempre nos permite estar cerquita, cariño, hemos encontrado maneras de sentirnos cerca y de recordarnos que, a pesar de los kilómetros, seguimos compartiendo algo muy bonito.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="page-footer-note justify-end">
+                        <span class="text-xl text-indigo-950" style="font-family: 'Dancing Script', cursive;">A pesar de los kilómetros, siempre cerquita</span>
+                    </div>
+                </div>
+
+                <!-- 3D POP-UP STAGE 2 (LOWER HALF: FONDOS 3 Y 4 JUNTOS EN ESTA PÁGINA + FOTO 2) -->
+                <div class="popup-stage">
+                    <!-- Fondo 3 (Left Pop-Up Landscape Wing) -->
+                    <div class="popup-layer" style="left: 55px; bottom: 52px; width: 340px; height: 220px; --tz: 18px; --ry: 9deg; --rx-open: -5deg; --delay: 0.06s;">
+                        <div class="scenic-photo-cutout cutout-wing-left">
+                            <img id="bg-s2-left" src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=900&q=85" alt="Paisaje 3">
+                        </div>
+                    </div>
+
+                    <!-- Fondo 4 (Right Pop-Up Landscape Wing - Together on Spread 2) -->
+                    <div class="popup-layer" style="right: 55px; bottom: 52px; width: 340px; height: 220px; --tz: 18px; --ry: -9deg; --rx-open: -5deg; --delay: 0.12s;">
+                        <div class="scenic-photo-cutout cutout-wing-right">
+                            <img id="bg-s2-right" src="https://images.unsplash.com/photo-1507400492013-162706c8c05e?auto=format&fit=crop&w=900&q=85" alt="Paisaje 4">
+                        </div>
+                    </div>
+
+                    <!-- Center Pop-Up Polaroid: Photo 2 -->
+                    <div class="popup-layer" style="left: 380px; bottom: 32px; width: 280px; height: 325px; --tz: 70px; --rx-open: -6deg; --rz: 1.2deg; --delay: 0.20s;">
+                        <div class="polaroid-card w-full h-full">
+                            <div class="polaroid-tape"></div>
+                            <div class="polaroid-img-wrap">
+                                <img id="img-photo2" src="" alt="Fotografía 2">
+                            </div>
+                            <p class="polaroid-caption">Nuestros sueños y planes juntos</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========================================================
+                 SPREAD 3: CAPÍTULO III (FOTO 3 - LA FOTO GRACIOSA)
+                 ========================================================= -->
+            <section class="spread" data-spread="3">
+                <!-- Left Page -->
+                <div class="page-half page-left">
+                    <div class="page-ornament"></div>
+                    <div class="page-text-top-left">
+                        <div class="flex items-center justify-between border-b border-rose-800/20 pb-1.5 mb-2.5">
+                            <span class="text-[10px] uppercase tracking-[0.25em] text-rose-800 font-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                Capítulo III • Nuestras Ocurrencias
+                            </span>
+                            <span class="text-xs font-bold text-stone-800" style="font-family: 'Cinzel Decorative', serif;">
+                                Lado Más Loquito
+                            </span>
+                        </div>
+                        <div class="story-card border-amber-400/80 bg-gradient-to-br from-amber-50/95 to-rose-50/95">
+                            <p class="text-[15px] text-stone-800 leading-relaxed">
+                                Y hablando de personitas, tampoco podemos olvidar nuestro lado más loquito. Porque sí, mi amor, lo nuestro tiene momentos dignos de un cuento romántico, pero también tiene fotografías cuestionables, caras raras, bromas sin sentido y ocurrencias que probablemente nadie más entendería. JAJAJA.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="page-footer-note">
+                        <span class="text-xl text-rose-900" style="font-family: 'Dancing Script', cursive;">Risas hasta que nos duela la barriga</span>
+                        <span class="text-[11px] text-stone-500 font-semibold" style="font-family: 'Plus Jakarta Sans', sans-serif;">Pág. 3</span>
+                    </div>
+                </div>
+
+                <!-- Right Page -->
+                <div class="page-half page-right">
+                    <div class="page-ornament"></div>
+                    <div class="page-text-top-right">
+                        <div class="flex items-center justify-between border-b border-rose-800/20 pb-1.5 mb-2.5">
+                            <span class="text-[10px] uppercase tracking-[0.25em] text-rose-800 font-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                Risas Para Siempre
+                            </span>
+                            <span class="text-[11px] text-stone-500 font-semibold" style="font-family: 'Plus Jakarta Sans', sans-serif;">III / VII</span>
+                        </div>
+                        <div class="story-card border-amber-400/80 bg-gradient-to-br from-amber-50/95 to-rose-50/95">
+                            <p class="text-[15px] text-stone-800 leading-relaxed">
+                                Porque contigo no solamente quiero vivir los momentos bonitos; también quiero reírme hasta que nos duela la barriga, hacer tonterías y guardar recuerdos que dentro de muchos años nos hagan decir: «Amor, ¿pero qué estábamos haciendo?». Y seguramente terminaremos riéndonos otra vez.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="page-footer-note justify-end">
+                        <span class="text-xl text-rose-900" style="font-family: 'Dancing Script', cursive;">«Amor, ¿pero qué estábamos haciendo?»</span>
+                    </div>
+                </div>
+
+                <!-- 3D POP-UP STAGE 3 (LOWER HALF) -->
+                <div class="popup-stage">
+                    <div class="popup-layer" style="left: 55px; bottom: 52px; width: 340px; height: 220px; --tz: 18px; --ry: 9deg; --rx-open: -5deg; --delay: 0.06s;">
+                        <div class="scenic-photo-cutout cutout-wing-left">
+                            <img id="bg-s3-left" src="https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?auto=format&fit=crop&w=900&q=85" alt="Paisaje Capítulo 3 Izquierda">
+                        </div>
+                    </div>
+
+                    <div class="popup-layer" style="right: 55px; bottom: 52px; width: 340px; height: 220px; --tz: 18px; --ry: -9deg; --rx-open: -5deg; --delay: 0.12s;">
+                        <div class="scenic-photo-cutout cutout-wing-right">
+                            <img id="bg-s3-right" src="https://images.unsplash.com/photo-1470509037663-253afd7f0f51?auto=format&fit=crop&w=900&q=85" alt="Paisaje Capítulo 3 Derecha">
+                        </div>
+                    </div>
+
+                    <!-- Center Pop-Up Polaroid: Photo 3 -->
+                    <div class="popup-layer" style="left: 380px; bottom: 32px; width: 280px; height: 325px; --tz: 70px; --rx-open: -6deg; --rz: -1.8deg; --delay: 0.20s;">
+                        <div class="polaroid-card w-full h-full ring-2 ring-amber-400/60">
+                            <div class="polaroid-tape"></div>
+                            <div class="polaroid-img-wrap">
+                                <img id="img-photo3" src="" alt="Fotografía 3">
+                            </div>
+                            <p class="polaroid-caption">Nuestro lado más loquito</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========================================================
+                 SPREAD 4: CAPÍTULO IV (FOTO 4 - NUESTRO ENCUENTRO)
+                 ========================================================= -->
+            <section class="spread" data-spread="4">
+                <!-- Left Page -->
+                <div class="page-half page-left">
+                    <div class="page-ornament"></div>
+                    <div class="page-text-top-left">
+                        <div class="flex items-center justify-between border-b border-amber-800/20 pb-1.5 mb-2.5">
+                            <span class="text-[10px] uppercase tracking-[0.25em] text-amber-900 font-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                Capítulo IV • Tenerte Cerquita
+                            </span>
+                            <span class="text-xs font-bold text-stone-800" style="font-family: 'Cinzel Decorative', serif;">
+                                Nuestro Encuentro
+                            </span>
+                        </div>
+                        <div class="story-card">
+                            <p class="text-[15.5px] text-stone-800 leading-relaxed">
+                                Y entonces llegó aquel momento en el que pudimos encontrarnos, mirarnos a los ojos y abrazarnos de verdad. Después de tanto imaginarlo, por fin pudimos convertir nuestros sueños en recuerdos.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="page-footer-note">
+                        <span class="text-xl text-amber-900" style="font-family: 'Dancing Script', cursive;">Abrazarnos de verdad</span>
+                        <span class="text-[11px] text-stone-500 font-semibold" style="font-family: 'Plus Jakarta Sans', sans-serif;">Pág. 4</span>
+                    </div>
+                </div>
+
+                <!-- Right Page -->
+                <div class="page-half page-right">
+                    <div class="page-ornament"></div>
+                    <div class="page-text-top-right">
+                        <div class="flex items-center justify-between border-b border-amber-800/20 pb-1.5 mb-2.5">
+                            <span class="text-[10px] uppercase tracking-[0.25em] text-amber-900 font-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                Una Y Mil Veces
+                            </span>
+                            <span class="text-[11px] text-stone-500 font-semibold" style="font-family: 'Plus Jakarta Sans', sans-serif;">IV / VII</span>
+                        </div>
+                        <div class="story-card">
+                            <p class="text-[15px] text-stone-800 leading-relaxed">
+                                Fueron momentos que guardaré siempre en mi corazón, porque tenerte cerquita, mi osita, fue mucho más bonito de lo que alguna vez pude imaginar. Si pudiera volver a vivir aquellos días, lo haría una y mil veces, aunque seguramente volvería a sentir que el tiempo pasa demasiado rápido cuando estoy contigo.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="page-footer-note justify-end">
+                        <span class="text-xl text-amber-900" style="font-family: 'Dancing Script', cursive;">Tenerte cerquita, mi osita</span>
+                    </div>
+                </div>
+
+                <!-- 3D POP-UP STAGE 4 (LOWER HALF) -->
+                <div class="popup-stage">
+                    <div class="popup-layer" style="left: 55px; bottom: 52px; width: 340px; height: 220px; --tz: 18px; --ry: 9deg; --rx-open: -5deg; --delay: 0.06s;">
+                        <div class="scenic-photo-cutout cutout-wing-left">
+                            <img id="bg-s4-left" src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=900&q=85" alt="Paisaje Capítulo 4 Izquierda">
+                        </div>
+                    </div>
+
+                    <div class="popup-layer" style="right: 55px; bottom: 52px; width: 340px; height: 220px; --tz: 18px; --ry: -9deg; --rx-open: -5deg; --delay: 0.12s;">
+                        <div class="scenic-photo-cutout cutout-wing-right">
+                            <img id="bg-s4-right" src="https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=900&q=85" alt="Paisaje Capítulo 4 Derecha">
+                        </div>
+                    </div>
+
+                    <!-- Center Pop-Up Polaroid: Photo 4 -->
+                    <div class="popup-layer" style="left: 380px; bottom: 32px; width: 280px; height: 325px; --tz: 70px; --rx-open: -6deg; --rz: 1.4deg; --delay: 0.20s;">
+                        <div class="polaroid-card w-full h-full">
+                            <div class="polaroid-tape"></div>
+                            <div class="polaroid-img-wrap">
+                                <img id="img-photo4" src="" alt="Fotografía 4">
+                            </div>
+                            <p class="polaroid-caption">Cuando los sueños se hicieron recuerdos</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========================================================
+                 SPREAD 5: CAPÍTULO V (FOTO 5 - APRENDER Y CUIDARNOS)
+                 ========================================================= -->
+            <section class="spread" data-spread="5">
+                <!-- Left Page -->
+                <div class="page-half page-left">
+                    <div class="page-ornament"></div>
+                    <div class="page-text-top-left">
+                        <div class="flex items-center justify-between border-b border-emerald-900/20 pb-1.5 mb-2.5">
+                            <span class="text-[10px] uppercase tracking-[0.25em] text-emerald-950 font-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                Capítulo V • Cuidar Este Amor
+                            </span>
+                            <span class="text-xs font-bold text-stone-800" style="font-family: 'Cinzel Decorative', serif;">
+                                Aprender Juntos
+                            </span>
+                        </div>
+                        <div class="story-card">
+                            <p class="text-[15px] text-stone-800 leading-relaxed">
+                                Claro que nuestra historia no ha sido perfecta. También hemos tenido días difíciles, pequeñas discusiones y momentos en los que nos ha costado entendernos. Pero, entre todo eso, seguimos teniendo la oportunidad de aprender, de escucharnos y de descubrir cómo podemos cuidar mejor este amor.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="page-footer-note">
+                        <span class="text-xl text-emerald-950" style="font-family: 'Dancing Script', cursive;">Cuidar siempre este amor</span>
+                        <span class="text-[11px] text-stone-500 font-semibold" style="font-family: 'Plus Jakarta Sans', sans-serif;">Pág. 5</span>
+                    </div>
+                </div>
+
+                <!-- Right Page -->
+                <div class="page-half page-right">
+                    <div class="page-ornament"></div>
+                    <div class="page-text-top-right">
+                        <div class="flex items-center justify-between border-b border-emerald-900/20 pb-1.5 mb-2.5">
+                            <span class="text-[10px] uppercase tracking-[0.25em] text-emerald-950 font-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                Paciencia Y Cariño
+                            </span>
+                            <span class="text-[11px] text-stone-500 font-semibold" style="font-family: 'Plus Jakarta Sans', sans-serif;">V / VII</span>
+                        </div>
+                        <div class="story-card">
+                            <p class="text-[15px] text-stone-800 leading-relaxed">
+                                Porque, mi vida, amar no significa que todo sea siempre bonito, sino que también debemos aprender a tratarnos con paciencia, comprender nuestros sentimientos y recordar que detrás de cada diferencia hay dos personitas que comparten algo muy especial.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="page-footer-note justify-end">
+                        <span class="text-xl text-emerald-950" style="font-family: 'Dancing Script', cursive;">Dos personitas que comparten algo especial</span>
+                    </div>
+                </div>
+
+                <!-- 3D POP-UP STAGE 5 (LOWER HALF) -->
+                <div class="popup-stage">
+                    <div class="popup-layer" style="left: 55px; bottom: 52px; width: 340px; height: 220px; --tz: 18px; --ry: 9deg; --rx-open: -5deg; --delay: 0.06s;">
+                        <div class="scenic-photo-cutout cutout-wing-left">
+                            <img id="bg-s5-left" src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=85" alt="Paisaje Capítulo 5 Izquierda">
+                        </div>
+                    </div>
+
+                    <div class="popup-layer" style="right: 55px; bottom: 52px; width: 340px; height: 220px; --tz: 18px; --ry: -9deg; --rx-open: -5deg; --delay: 0.12s;">
+                        <div class="scenic-photo-cutout cutout-wing-right">
+                            <img id="bg-s5-right" src="https://images.unsplash.com/photo-1439853949127-fa647821eba0?auto=format&fit=crop&w=900&q=85" alt="Paisaje Capítulo 5 Derecha">
+                        </div>
+                    </div>
+
+                    <!-- Center Pop-Up Polaroid: Photo 5 -->
+                    <div class="popup-layer" style="left: 380px; bottom: 32px; width: 280px; height: 325px; --tz: 70px; --rx-open: -6deg; --rz: -1.2deg; --delay: 0.20s;">
+                        <div class="polaroid-card w-full h-full">
+                            <div class="polaroid-tape"></div>
+                            <div class="polaroid-img-wrap">
+                                <img id="img-photo5" src="" alt="Fotografía 5">
+                            </div>
+                            <p class="polaroid-caption">Aprendiendo y creciendo juntos</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========================================================
+                 SPREAD 6: CAPÍTULO VI (FOTO 6 - HOY CUMPLIMOS SIETE MESES)
+                 ========================================================= -->
+            <section class="spread" data-spread="6">
+                <!-- Left Page -->
+                <div class="page-half page-left">
+                    <div class="page-ornament"></div>
+                    <div class="page-text-top-left">
+                        <div class="flex items-center justify-between border-b border-sky-900/20 pb-1.5 mb-2.5">
+                            <span class="text-[10px] uppercase tracking-[0.25em] text-sky-950 font-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                Capítulo VI • Siete Meses
+                            </span>
+                            <span class="text-xs font-bold text-stone-800" style="font-family: 'Cinzel Decorative', serif;">
+                                Nuestra Ilusión
+                            </span>
+                        </div>
+                        <div class="story-card">
+                            <p class="text-[15.5px] text-stone-800 leading-relaxed">
+                                Hoy cumplimos siete meses, mi cielito. Siete meses de recuerdos, de aprendizajes, de ilusiones y de momentos que han ido formando esta pequeña historia que solo nosotros conocemos de verdad.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="page-footer-note">
+                        <span class="text-xl text-sky-950" style="font-family: 'Dancing Script', cursive;">Hoy cumplimos siete meses, mi cielito</span>
+                        <span class="text-[11px] text-stone-500 font-semibold" style="font-family: 'Plus Jakarta Sans', sans-serif;">Pág. 6</span>
+                    </div>
+                </div>
+
+                <!-- Right Page -->
+                <div class="page-half page-right">
+                    <div class="page-ornament"></div>
+                    <div class="page-text-top-right">
+                        <div class="flex items-center justify-between border-b border-sky-900/20 pb-1.5 mb-2.5">
+                            <span class="text-[10px] uppercase tracking-[0.25em] text-sky-950 font-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                Todo Por Vivir
+                            </span>
+                            <span class="text-[11px] text-stone-500 font-semibold" style="font-family: 'Plus Jakarta Sans', sans-serif;">VI / VII</span>
+                        </div>
+                        <div class="story-card">
+                            <p class="text-[15px] text-stone-800 leading-relaxed">
+                                Y aunque todavía nos queda muchísimo por vivir, me emociona pensar en todas las páginas que aún podemos escribir juntos: más abrazos, más fotografías, más aventuras, más sueños compartidos y muchísimos días en los que pueda recordarte lo especial que eres para mí.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="page-footer-note justify-end">
+                        <span class="text-xl text-sky-950" style="font-family: 'Dancing Script', cursive;">Más aventuras y sueños compartidos</span>
+                    </div>
+                </div>
+
+                <!-- 3D POP-UP STAGE 6 (LOWER HALF) -->
+                <div class="popup-stage">
+                    <div class="popup-layer" style="left: 55px; bottom: 52px; width: 340px; height: 220px; --tz: 18px; --ry: 9deg; --rx-open: -5deg; --delay: 0.06s;">
+                        <div class="scenic-photo-cutout cutout-wing-left">
+                            <img id="bg-s6-left" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=85" alt="Paisaje Capítulo 6 Izquierda">
+                        </div>
+                    </div>
+
+                    <div class="popup-layer" style="right: 55px; bottom: 52px; width: 340px; height: 220px; --tz: 18px; --ry: -9deg; --rx-open: -5deg; --delay: 0.12s;">
+                        <div class="scenic-photo-cutout cutout-wing-right">
+                            <img id="bg-s6-right" src="https://images.unsplash.com/photo-1505118380757-91f5f5632de0?auto=format&fit=crop&w=900&q=85" alt="Paisaje Capítulo 6 Derecha">
+                        </div>
+                    </div>
+
+                    <!-- Center Pop-Up Polaroid: Photo 6 -->
+                    <div class="popup-layer" style="left: 380px; bottom: 32px; width: 280px; height: 325px; --tz: 70px; --rx-open: -6deg; --rz: 1.2deg; --delay: 0.20s;">
+                        <div class="polaroid-card w-full h-full">
+                            <div class="polaroid-tape"></div>
+                            <div class="polaroid-img-wrap">
+                                <img id="img-photo6" src="" alt="Fotografía 6">
+                            </div>
+                            <p class="polaroid-caption">Lo especial que eres para mí</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========================================================
+                 SPREAD 7: CAPÍTULO VII (FOTO 7 - GRACIAS POR ESTOS SIETE MESES + CARTA FINAL)
+                 ========================================================= -->
+            <section class="spread" data-spread="7">
+                <!-- Left Page -->
+                <div class="page-half page-left">
+                    <div class="page-ornament"></div>
+                    <div class="page-text-top-left">
+                        <div class="flex items-center justify-between border-b border-rose-900/20 pb-1.5 mb-2">
+                            <span class="text-[10px] uppercase tracking-[0.25em] text-rose-900 font-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                Capítulo VII • Próximos Capítulos
+                            </span>
+                            <span class="text-xs font-bold text-stone-800" style="font-family: 'Cinzel Decorative', serif;">
+                                Poquito A Poquito
+                            </span>
+                        </div>
+                        <div class="story-card py-2.5 px-4">
+                            <p class="text-[14.2px] text-stone-800 leading-snug">
+                                Mi amorcito, quiero que cuando leas estas palabras recuerdes que eres una personita muy importante en mi vida. Que cada recuerdo bonito que hemos creado tiene un lugar especial en mi corazón y que me hace ilusión imaginar todo lo que todavía nos falta por descubrir. No sé exactamente cómo serán los próximos capítulos, pero quisiera llenarlos contigo, poquito a poquito, aprendiendo, creciendo y encontrando nuevas razones para sonreír juntos.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="page-footer-note">
+                        <span class="text-xl text-rose-900" style="font-family: 'Dancing Script', cursive;">Eres muy importante en mi vida</span>
+                        <span class="text-[11px] text-stone-500 font-semibold" style="font-family: 'Plus Jakarta Sans', sans-serif;">Pág. 7</span>
+                    </div>
+                </div>
+
+                <!-- Right Page -->
+                <div class="page-half page-right">
+                    <div class="page-ornament"></div>
+                    <div class="page-text-top-right">
+                        <div class="flex items-center justify-between border-b border-rose-900/20 pb-1.5 mb-2">
+                            <span class="text-[10px] uppercase tracking-[0.25em] text-rose-900 font-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                Nuestra Historia Real
+                            </span>
+                            <span class="text-[11px] text-stone-500 font-semibold" style="font-family: 'Plus Jakarta Sans', sans-serif;">VII / VII</span>
+                        </div>
+                        <div class="story-card py-2.5 px-4 bg-gradient-to-br from-amber-50/95 to-rose-50/95 border-rose-300">
+                            <p class="text-[14.2px] text-stone-800 leading-snug">
+                                Gracias por estos siete meses, mi osita hermosa. Gracias por las risas, por los momentos que guardo con cariño y por permitirme compartir una parte de mi vida contigo. Si pudiera pedir algo para nuestra historia, sería que nunca dejemos de encontrar motivos para cuidarnos, de aprender el uno del otro y de construir recuerdos que algún día podamos mirar con ternura.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="page-footer-note justify-end">
+                        <button onclick="openLoveLetterModal()" class="px-5 py-1.5 rounded-full bg-rose-800 hover:bg-rose-700 text-amber-100 font-semibold text-xs shadow-lg hover:scale-105 transition" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                            Leer Epílogo Final
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3D POP-UP STAGE 7 (LOWER HALF) -->
+                <div class="popup-stage">
+                    <div class="popup-layer" style="left: 55px; bottom: 52px; width: 340px; height: 220px; --tz: 18px; --ry: 9deg; --rx-open: -5deg; --delay: 0.06s;">
+                        <div class="scenic-photo-cutout cutout-wing-left">
+                            <img id="bg-s7-left" src="https://images.unsplash.com/photo-1522383225653-ed111181a951?auto=format&fit=crop&w=900&q=85" alt="Paisaje Capítulo 7 Izquierda">
+                        </div>
+                    </div>
+
+                    <div class="popup-layer" style="right: 55px; bottom: 52px; width: 340px; height: 220px; --tz: 18px; --ry: -9deg; --rx-open: -5deg; --delay: 0.12s;">
+                        <div class="scenic-photo-cutout cutout-wing-right">
+                            <img id="bg-s7-right" src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=900&q=85" alt="Paisaje Capítulo 7 Derecha">
+                        </div>
+                    </div>
+
+                    <!-- Center Pop-Up Polaroid: Photo 7 -->
+                    <div class="popup-layer" style="left: 380px; bottom: 32px; width: 280px; height: 325px; --tz: 70px; --rx-open: -6deg; --rz: 0deg; --delay: 0.20s;">
+                        <div class="polaroid-card w-full h-full ring-2 ring-rose-300">
+                            <div class="polaroid-tape"></div>
+                            <div class="polaroid-img-wrap">
+                                <img id="img-photo7" src="" alt="Fotografía 7">
+                            </div>
+                            <p class="polaroid-caption">Tú y yo, cariño. Siete meses de historia</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- =========================================================
+         BOTTOM PAGE NAVIGATION BAR
+         ========================================================= -->
+    <footer class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 sm:gap-3 bg-stone-950/90 backdrop-blur-md border border-amber-500/30 px-4 py-2 rounded-full shadow-2xl" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+        <button onclick="prevSpread()" id="prevBtn" disabled
+            class="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none text-amber-100 text-xs font-semibold flex items-center gap-1 transition">
+            <span>Anterior</span>
+        </button>
+
+        <!-- Spread Dots (Cover + 7 Pages) -->
+        <div class="flex items-center gap-1.5 px-1 sm:px-2" id="spreadDots">
+            <button onclick="goToSpread(0)" class="w-5 h-2.5 rounded-full bg-amber-400 transition-all" title="Portada"></button>
+            <button onclick="goToSpread(1)" class="w-2.5 h-2.5 rounded-full bg-white/30 hover:bg-white/60 transition-all" title="Capítulo I"></button>
+            <button onclick="goToSpread(2)" class="w-2.5 h-2.5 rounded-full bg-white/30 hover:bg-white/60 transition-all" title="Capítulo II"></button>
+            <button onclick="goToSpread(3)" class="w-2.5 h-2.5 rounded-full bg-white/30 hover:bg-white/60 transition-all" title="Capítulo III"></button>
+            <button onclick="goToSpread(4)" class="w-2.5 h-2.5 rounded-full bg-white/30 hover:bg-white/60 transition-all" title="Capítulo IV"></button>
+            <button onclick="goToSpread(5)" class="w-2.5 h-2.5 rounded-full bg-white/30 hover:bg-white/60 transition-all" title="Capítulo V"></button>
+            <button onclick="goToSpread(6)" class="w-2.5 h-2.5 rounded-full bg-white/30 hover:bg-white/60 transition-all" title="Capítulo VI"></button>
+            <button onclick="goToSpread(7)" class="w-2.5 h-2.5 rounded-full bg-white/30 hover:bg-white/60 transition-all" title="Capítulo VII"></button>
+        </div>
+
+        <button onclick="nextSpread()" id="nextBtn"
+            class="px-3.5 py-1.5 rounded-full bg-amber-500 hover:bg-amber-400 disabled:opacity-30 disabled:pointer-events-none text-stone-950 text-xs font-bold flex items-center gap-1 transition">
+            <span>Siguiente</span>
+        </button>
+    </footer>
+
+    <!-- =========================================================
+         MODAL: UNFOLDING FINAL EPILOGUE / LOVE LETTER
+         ========================================================= -->
+    <div id="loveLetterModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="relative w-full max-w-xl bg-[#fcf6e8] border-2 border-amber-700/40 rounded-2xl p-8 sm:p-10 shadow-2xl text-stone-800 transform transition-all">
+            <div class="w-14 h-14 rounded-full bg-gradient-to-br from-rose-700 to-red-950 border-2 border-amber-400/60 shadow-lg flex items-center justify-center mx-auto -mt-14 mb-4 text-amber-200 font-bold text-lg" style="font-family: 'Cinzel Decorative', serif;">
+                7M
+            </div>
+
+            <button onclick="closeLoveLetterModal()" class="absolute top-4 right-4 px-3 py-1 rounded-full bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold text-xs" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                Cerrar
+            </button>
+
+            <h3 class="text-3xl text-rose-900 text-center mb-5" style="font-family: 'Dancing Script', cursive;">
+                Una historia real: la nuestra
+            </h3>
+
+            <div class="text-[17px] leading-relaxed text-stone-800 space-y-3.5 max-h-[58vh] overflow-y-auto pr-2">
+                <p>Porque este libro no cuenta una historia perfecta, cariño; cuenta una historia real. Una historia de dos personitas que se quieren, que todavía tienen mucho por aprender y que han comenzado a llenar juntas unas páginas que significan muchísimo.</p>
+                <p>Felices siete meses, mi vida. Si nuestra historia fuera un libro, no quisiera que esta fuera la última página. Quisiera seguir escribiéndolo contigo, mi amorcito, llenándolo de abrazos, risas, sueños y recuerdos que podamos conservar para siempre.</p>
+                <p>Y si algún día me preguntan cuál es mi capítulo favorito, diré que es este, porque tengo la dicha de vivirlo contigo. Aunque, entre nosotros, tengo la sospecha de que los capítulos que vienen serán todavía más bonitos.</p>
+                <p>Porque, de todas las historias que podría vivir, mi favorita siempre será la que escribo contigo, mi osita, mi cielito, mi amor bonito. Y si pudiera volver al principio y comenzar todo de nuevo, volvería a elegirte a ti, una y mil veces.</p>
+            </div>
+
+            <p class="text-center text-2xl text-rose-900 mt-6 pt-3 border-t border-amber-700/20" style="font-family: 'Dancing Script', cursive;">
+                Tú y yo, cariño. Siete meses de historia y muchísimas páginas más por escribir.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        /* =========================================================
+           1. INDEXEDDB STORAGE (FOR .ZIP PHOTOS, BACKGROUNDS + MP3)
+           ========================================================= */
+        const DB_NAME = 'PopUpBook7MesesDB_v4';
+        const DB_VERSION = 1;
+        let dbInstance = null;
+
+        function openDatabase() {
+            return new Promise((resolve, reject) => {
+                if (dbInstance) return resolve(dbInstance);
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('assets')) {
+                        db.createObjectStore('assets');
+                    }
+                };
+                req.onsuccess = (e) => {
+                    dbInstance = e.target.result;
+                    resolve(dbInstance);
+                };
+                req.onerror = (e) => reject(e);
+            });
+        }
+
+        async function saveAssetToDB(key, val) {
+            try {
+                const db = await openDatabase();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction('assets', 'readwrite');
+                    tx.objectStore('assets').put(val, key);
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = (e) => reject(e);
+                });
+            } catch (err) {
+                console.warn('IndexedDB save fallback:', err);
+            }
+        }
+
+        async function getAssetFromDB(key) {
+            try {
+                const db = await openDatabase();
+                return new Promise((resolve) => {
+                    const tx = db.transaction('assets', 'readonly');
+                    const req = tx.objectStore('assets').get(key);
+                    req.onsuccess = () => resolve(req.result || null);
+                    req.onerror = () => resolve(null);
+                });
+            } catch (err) {
+                return null;
+            }
+        }
+
+        /* =========================================================
+           2. PASTEL PLACEHOLDERS & LOCAL FOLDER FALLBACKS
+           ========================================================= */
+        function createPastelPlaceholderSvg(num, title, subtitle, c1, c2) {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 440">
+                <defs>
+                    <linearGradient id="g${num}" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="${c1}"/>
+                        <stop offset="100%" stop-color="${c2}"/>
+                    </linearGradient>
+                </defs>
+                <rect width="400" height="440" fill="url(#g${num})"/>
+                <circle cx="200" cy="175" r="70" fill="rgba(255,255,255,0.45)"/>
+                <path d="M200 230 C200 230 140 185 140 147 C140 123 158 110 178 110 C190 110 200 120 200 128 C200 120 210 110 222 110 C242 110 260 123 260 147 C260 185 200 230 200 230 Z" fill="#ffffff" opacity="0.9"/>
+                <text x="200" y="182" text-anchor="middle" fill="#881337" font-family="Georgia, serif" font-size="25" font-weight="bold">Foto ${num}</text>
+                <text x="200" y="320" text-anchor="middle" fill="#4a1d2f" font-family="Georgia, serif" font-size="22" font-weight="bold">${title}</text>
+                <text x="200" y="355" text-anchor="middle" fill="#6b2d46" font-family="sans-serif" font-size="14">${subtitle}</text>
+            </svg>`;
+            return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+        }
+
+        const PLACEHOLDER_PHOTOS = {
+            photo1: createPastelPlaceholderSvg(1, 'Capítulo I', 'Nuestra historia, mi amorcito', '#fce7f3', '#fef3c7'),
+            photo2: createPastelPlaceholderSvg(2, 'Capítulo II', 'Nuestros pequeños refugios', '#e0e7ff', '#fae8ff'),
+            photo3: createPastelPlaceholderSvg(3, 'Capítulo III', 'Nuestro lado más loquito', '#fef08a', '#fbcfe8'),
+            photo4: createPastelPlaceholderSvg(4, 'Capítulo IV', 'Tenerte cerquita, mi osita', '#ffedd5', '#fce7f3'),
+            photo5: createPastelPlaceholderSvg(5, 'Capítulo V', 'Cuidar mejor este amor', '#e0f2fe', '#ffe4e6'),
+            photo6: createPastelPlaceholderSvg(6, 'Capítulo VI', 'Hoy cumplimos siete meses', '#f3e8ff', '#fed7aa'),
+            photo7: createPastelPlaceholderSvg(7, 'Capítulo VII', 'Siete meses, un solo corazón', '#ffe4e6', '#fef08a')
+        };
+
+        const LOCAL_CANDIDATE_PATHS = {
+            photo1: ['POP UP/imagen 1.jpeg', 'POP UP/imagen 1.jpg', 'imagen 1.jpeg', 'imagen 1.jpg'],
+            photo2: ['POP UP/imagen 2.jpg', 'POP UP/imagen 2.jpeg', 'imagen 2.jpg', 'imagen 2.jpeg'],
+            photo3: ['POP UP/imagen 3.jpg', 'POP UP/imagen 3.jpeg', 'imagen 3.jpg', 'imagen 3.jpeg'],
+            photo4: ['POP UP/imagen 4.jpg', 'POP UP/imagen 4.jpeg', 'imagen 4.jpg', 'imagen 4.jpeg'],
+            photo5: ['POP UP/imagen 5.jpg', 'POP UP/imagen 5.jpeg', 'imagen 5.jpg', 'imagen 5.jpeg'],
+            photo6: ['POP UP/imagen 6.jpeg', 'POP UP/imagen 6.jpg', 'imagen 6.jpeg', 'imagen 6.jpg'],
+            photo7: ['POP UP/imagen 7.jpeg', 'POP UP/imagen 7.jpg', 'imagen 7.jpeg', 'imagen 7.jpg']
+        };
+
+        const ALL_BG_SLOTS = [
+            'bg-s1-left', 'bg-s1-right',
+            'bg-s2-left', 'bg-s2-right',
+            'bg-s3-left', 'bg-s3-right',
+            'bg-s4-left', 'bg-s4-right',
+            'bg-s5-left', 'bg-s5-right',
+            'bg-s6-left', 'bg-s6-right',
+            'bg-s7-left', 'bg-s7-right'
+        ];
+
+        /* =========================================================
+           3. SMART .ZIP EXTRACTOR:
+              - Couple Photos (`imagen 1`..`imagen 7`) -> Polaroid 1..7
+              - Numbered Backgrounds `1` & `2` -> Together on Spread 1 (`bg-s1-left`, `bg-s1-right`)
+              - Numbered Backgrounds `3` & `4` -> Together on Spread 2 (`bg-s2-left`, `bg-s2-right`)
+              - Unnumbered / Remaining Backgrounds -> Distributed across Spreads 3..7 (and 1..2 if needed)
+              - Audio (`Moments.mp3`) -> Imported Song
+           ========================================================= */
+        function showToast(message) {
+            const banner = document.getElementById('toastBanner');
+            document.getElementById('toastText').textContent = message;
+            banner.classList.remove('hidden');
+            banner.classList.add('flex');
+            setTimeout(() => {
+                banner.classList.add('hidden');
+                banner.classList.remove('flex');
+            }, 4200);
+        }
+
+        async function processZipFile(file) {
+            if (!file) return;
+            showToast('Abriendo archivo .ZIP y organizando fotos, paisajes y canción...');
+
+            try {
+                const zip = await JSZip.loadAsync(file);
+                const entries = Object.keys(zip.files);
+
+                const imageItems = [];
+                let loadedSongName = null;
+
+                for (const filename of entries) {
+                    const zipEntry = zip.files[filename];
+                    if (zipEntry.dir) continue;
+                    if (filename.includes('__MACOSX') || filename.split('/').pop().startsWith('.')) continue;
+
+                    const baseName = filename.split('/').pop();
+                    const cleanLower = baseName.toLowerCase();
+
+                    // Check Audio (MP3/WAV/OGG/M4A)
+                    if (/\.(mp3|wav|ogg|m4a|aac)$/i.test(cleanLower)) {
+                        const audioBlob = await zipEntry.async('blob');
+                        const mimeType = cleanLower.endsWith('.mp3') ? 'audio/mpeg' : (audioBlob.type || 'audio/mpeg');
+                        const typedBlob = new Blob([audioBlob], { type: mimeType });
+                        await saveAssetToDB('customSongBlob', typedBlob);
+                        await saveAssetToDB('customSongName', baseName);
+                        loadedSongName = baseName;
+                        setupCustomSongFromBlob(typedBlob, loadedSongName, true);
+                        continue;
+                    }
+
+                    // Check Images
+                    if (/\.(jpe?g|png|webp|gif|bmp)$/i.test(cleanLower)) {
+                        imageItems.push({
+                            fullPath: filename,
+                            baseName: baseName,
+                            cleanLower: cleanLower,
+                            nameNoExt: cleanLower.replace(/\.(jpe?g|png|webp|gif|bmp)$/i, '').trim(),
+                            entry: zipEntry
+                        });
+                    }
+                }
+
+                // Separate Couple Photos ("imagen 1..7" / "foto 1..7") from Background Landscapes
+                const couplePhotosMap = {}; // 1..7
+                const numberedBgsMap = {};  // 1..4 (or more)
+                const unnumberedBgs = [];
+
+                // Check if there are explicit "imagen X" or "foto X" files
+                const hasExplicitImagen = imageItems.some(it => /(?:imagen|foto|img|photo)\s*[1-7](?:\D|$)/i.test(it.nameNoExt));
+
+                for (const item of imageItems) {
+                    const explicitCoupleMatch = item.nameNoExt.match(/^(?:imagen|foto|img|photo)[_\-\s]*([1-7])$/i);
+                    const explicitBgMatch = item.nameNoExt.match(/^(?:fondo|paisaje|bg|background)[_\-\s]*(\d+)$/i);
+                    const pureNumMatch = item.nameNoExt.match(/^0*([1-7])$/);
+
+                    if (explicitCoupleMatch) {
+                        const idx = parseInt(explicitCoupleMatch[1], 10);
+                        couplePhotosMap[idx] = item;
+                    } else if (explicitBgMatch) {
+                        const idx = parseInt(explicitBgMatch[1], 10);
+                        numberedBgsMap[idx] = item;
+                    } else if (pureNumMatch) {
+                        const idx = parseInt(pureNumMatch[1], 10);
+                        // If the ZIP also has "imagen 1..7", then "1..4" are background landscapes.
+                        // Or if the ZIP only has fondos (no "imagen" prefix and e.g. unnumbered files exist alongside 1..4), treat 1..4 as numbered backgrounds!
+                        const hasOtherUnnumbered = imageItems.some(x => !/\d/.test(x.nameNoExt));
+                        if (hasExplicitImagen || (hasOtherUnnumbered && idx <= 4)) {
+                            numberedBgsMap[idx] = item;
+                        } else {
+                            // Otherwise if user uploaded a ZIP with only 1..7 couple photos
+                            couplePhotosMap[idx] = item;
+                        }
+                    } else {
+                        // Check if it contains "imagen 1..7" anywhere in the name
+                        const looseImagenMatch = item.nameNoExt.match(/(?:imagen|foto)\s*([1-7])(?:\D|$)/i);
+                        if (looseImagenMatch && !couplePhotosMap[parseInt(looseImagenMatch[1], 10)]) {
+                            couplePhotosMap[parseInt(looseImagenMatch[1], 10)] = item;
+                        } else {
+                            // Extract any standalone number 1..4 for backgrounds
+                            const anyNumMatch = item.nameNoExt.match(/(?:^|\D)([1-4])(?:\D|$)/);
+                            if (anyNumMatch && !numberedBgsMap[parseInt(anyNumMatch[1], 10)]) {
+                                numberedBgsMap[parseInt(anyNumMatch[1], 10)] = item;
+                            } else {
+                                unnumberedBgs.push(item);
+                            }
+                        }
+                    }
+                }
+
+                let loadedCoupleCount = 0;
+                let loadedBgCount = 0;
+
+                // 1. Apply Couple Photos (1..7)
+                for (let i = 1; i <= 7; i++) {
+                    if (couplePhotosMap[i]) {
+                        const blob = await couplePhotosMap[i].entry.async('blob');
+                        const dataUrl = await compressBlobToDataUrl(blob, 1200);
+                        const key = 'photo' + i;
+                        const imgEl = document.getElementById('img-' + key);
+                        if (imgEl) imgEl.src = dataUrl;
+                        await saveAssetToDB(key, dataUrl);
+                        loadedCoupleCount++;
+                    }
+                }
+
+                // 2. Apply Background Landscapes:
+                // Rule: 1 and 2 together on the SAME page (Spread 1: bg-s1-left & bg-s1-right)
+                // Rule: 3 and 4 together on another SAME page (Spread 2: bg-s2-left & bg-s2-right)
+                const bgDataUrlsNumbered = {};
+                for (const numKey of Object.keys(numberedBgsMap)) {
+                    const blob = await numberedBgsMap[numKey].entry.async('blob');
+                    bgDataUrlsNumbered[numKey] = await compressBlobToDataUrl(blob, 1100);
+                    loadedBgCount++;
+                }
+
+                const bgDataUrlsUnnumbered = [];
+                for (const item of unnumberedBgs) {
+                    const blob = await item.entry.async('blob');
+                    const dUrl = await compressBlobToDataUrl(blob, 1100);
+                    bgDataUrlsUnnumbered.push(dUrl);
+                    loadedBgCount++;
+                }
+
+                // Assign 1 & 2 to Spread 1 (same page)
+                if (bgDataUrlsNumbered[1] || bgDataUrlsNumbered[2]) {
+                    const bg1 = bgDataUrlsNumbered[1] || bgDataUrlsNumbered[2];
+                    const bg2 = bgDataUrlsNumbered[2] || bgDataUrlsNumbered[1];
+                    await applyBackgroundSlot('bg-s1-left', bg1);
+                    await applyBackgroundSlot('bg-s1-right', bg2);
+                }
+
+                // Assign 3 & 4 to Spread 2 (same page)
+                if (bgDataUrlsNumbered[3] || bgDataUrlsNumbered[4]) {
+                    const bg3 = bgDataUrlsNumbered[3] || bgDataUrlsNumbered[4];
+                    const bg4 = bgDataUrlsNumbered[4] || bgDataUrlsNumbered[3];
+                    await applyBackgroundSlot('bg-s2-left', bg3);
+                    await applyBackgroundSlot('bg-s2-right', bg4);
+                }
+
+                // Collect any extra numbered backgrounds (>4) + all unnumbered backgrounds for remaining pages
+                const remainingPool = [...bgDataUrlsUnnumbered];
+                Object.keys(bgDataUrlsNumbered).forEach(k => {
+                    if (parseInt(k, 10) > 4) remainingPool.push(bgDataUrlsNumbered[k]);
+                });
+
+                // If user uploaded unnumbered backgrounds, distribute them across Spreads 3..7
+                // (and also Spreads 1..2 if 1,2,3,4 were not in this zip)
+                if (remainingPool.length > 0) {
+                    const targetSpreads = [];
+                    if (!bgDataUrlsNumbered[1] && !bgDataUrlsNumbered[2]) targetSpreads.push(1);
+                    if (!bgDataUrlsNumbered[3] && !bgDataUrlsNumbered[4]) targetSpreads.push(2);
+                    targetSpreads.push(3, 4, 5, 6, 7);
+
+                    let poolIdx = 0;
+                    for (const spNum of targetSpreads) {
+                        const imgForSpread = remainingPool[poolIdx % remainingPool.length];
+                        poolIdx++;
+                        await applyBackgroundSlot(`bg-s${spNum}-left`, imgForSpread);
+                        await applyBackgroundSlot(`bg-s${spNum}-right`, imgForSpread);
+                    }
+                }
+
+                const summary = [];
+                if (loadedCoupleCount > 0) summary.push(`${loadedCoupleCount} fotos nuestras`);
+                if (loadedBgCount > 0) summary.push(`${loadedBgCount} paisajes de fondo`);
+                if (loadedSongName) summary.push(`canción "${loadedSongName}"`);
+
+                if (summary.length > 0) {
+                    showToast(`Cargado con éxito: ${summary.join(', ')}`);
+                    document.getElementById('zipBtnLabel').textContent = 'Cargar otro .ZIP';
+                } else {
+                    showToast('No se encontraron imágenes o audio compatibles en el archivo .ZIP');
+                }
+            } catch (err) {
+                console.error('Error al procesar el archivo .ZIP:', err);
+                showToast('Error al leer el archivo .ZIP. Intenta nuevamente.');
+            }
+        }
+
+        async function applyBackgroundSlot(slotId, dataUrl) {
+            const el = document.getElementById(slotId);
+            if (el) el.src = dataUrl;
+            await saveAssetToDB(slotId, dataUrl);
+        }
+
+        function handleZipUpload(event) {
+            const file = event.target.files[0];
+            if (file) processZipFile(file);
+        }
+
+        // Drag and Drop .ZIP anywhere on the window
+        window.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const overlay = document.getElementById('dropZoneOverlay');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+        });
+
+        window.addEventListener('dragleave', (e) => {
+            if (e.relatedTarget === null) {
+                const overlay = document.getElementById('dropZoneOverlay');
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+            }
+        });
+
+        window.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const overlay = document.getElementById('dropZoneOverlay');
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const droppedFile = e.dataTransfer.files[0];
+                if (droppedFile.name.toLowerCase().endsWith('.zip')) {
+                    processZipFile(droppedFile);
+                } else if (droppedFile.type.startsWith('audio/')) {
+                    saveAssetToDB('customSongBlob', droppedFile);
+                    saveAssetToDB('customSongName', droppedFile.name);
+                    setupCustomSongFromBlob(droppedFile, droppedFile.name, true);
+                    showToast(`Canción "${droppedFile.name}" importada`);
+                }
+            }
+        });
+
+        function compressBlobToDataUrl(blob, maxDim = 1200) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width;
+                        let h = img.height;
+                        if (w > h && w > maxDim) {
+                            h = Math.round((h * maxDim) / w);
+                            w = maxDim;
+                        } else if (h > maxDim) {
+                            w = Math.round((w * maxDim) / h);
+                            h = maxDim;
+                        }
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', 0.90));
+                    };
+                    img.onerror = () => resolve(e.target.result);
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        /* =========================================================
+           4. CLEAN AUDIO ENGINE:
+              - ONLY plays the user's imported song (Moments.mp3)
+              - Subtle, single, non-overlapping paper page turn sound
+           ========================================================= */
+        let audioCtx = null;
+        let noiseBuffer = null;
+        let activePageSoundNodes = [];
+
+        let hasCustomSong = false;
+        let customSongName = '';
+        let isMusicPlaying = false;
+        let currentSongObjectUrl = null;
+
+        function ensureAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                createNoiseBuffer();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function createNoiseBuffer() {
+            if (!audioCtx) return;
+            const bufferSize = audioCtx.sampleRate * 1.5;
+            noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            let b0 = 0, b1 = 0, b2 = 0;
+            for (let i = 0; i < bufferSize; i++) {
+                const white = Math.random() * 2 - 1;
+                b0 = 0.997 * b0 + white * 0.029;
+                b1 = 0.985 * b1 + white * 0.032;
+                b2 = 0.950 * b2 + white * 0.048;
+                output[i] = (b0 + b1 + b2 + white * 0.18) * 0.12;
+            }
+        }
+
+        function playCleanPageTurnSound() {
+            try {
+                ensureAudio();
+                if (!noiseBuffer) createNoiseBuffer();
+
+                activePageSoundNodes.forEach(n => {
+                    try { n.stop(); } catch (e) {}
+                    try { n.disconnect(); } catch (e) {}
+                });
+                activePageSoundNodes = [];
+
+                const now = audioCtx.currentTime;
+                const slideSource = audioCtx.createBufferSource();
+                slideSource.buffer = noiseBuffer;
+
+                const slideFilter = audioCtx.createBiquadFilter();
+                slideFilter.type = 'bandpass';
+                slideFilter.Q.setValueAtTime(2.2, now);
+                slideFilter.frequency.setValueAtTime(580, now);
+                slideFilter.frequency.exponentialRampToValueAtTime(1450, now + 0.14);
+                slideFilter.frequency.exponentialRampToValueAtTime(480, now + 0.34);
+
+                const slideGain = audioCtx.createGain();
+                const peakGain = isMusicPlaying ? 0.07 : 0.15;
+                slideGain.gain.setValueAtTime(0.001, now);
+                slideGain.gain.linearRampToValueAtTime(peakGain, now + 0.04);
+                slideGain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+
+                slideSource.connect(slideFilter);
+                slideFilter.connect(slideGain);
+                slideGain.connect(audioCtx.destination);
+                slideSource.start(now);
+                slideSource.stop(now + 0.38);
+
+                activePageSoundNodes.push(slideSource);
+            } catch (e) {}
+        }
+
+        function setupCustomSongFromBlob(blobOrUrl, songName = 'Moments.mp3', autoPlay = false) {
+            const audioEl = document.getElementById('customSongAudio');
+            if (currentSongObjectUrl) {
+                URL.revokeObjectURL(currentSongObjectUrl);
+                currentSongObjectUrl = null;
+            }
+
+            if (typeof blobOrUrl === 'string') {
+                audioEl.src = blobOrUrl;
+            } else {
+                currentSongObjectUrl = URL.createObjectURL(blobOrUrl);
+                audioEl.src = currentSongObjectUrl;
+            }
+
+            hasCustomSong = true;
+            customSongName = songName.replace(/\.(mp3|wav|ogg|m4a|aac)$/i, '');
+            const label = document.getElementById('musicLabel');
+            const btn = document.getElementById('musicBtn');
+
+            if (autoPlay) {
+                audioEl.volume = 0.85;
+                audioEl.play().then(() => {
+                    isMusicPlaying = true;
+                    btn.classList.add('border-amber-400', 'bg-amber-950/80');
+                    label.textContent = `Sonando: ${customSongName}`;
+                }).catch(() => {
+                    isMusicPlaying = false;
+                    label.textContent = `Reproducir: ${customSongName}`;
+                });
+            } else {
+                label.textContent = isMusicPlaying ? `Sonando: ${customSongName}` : `Reproducir: ${customSongName}`;
+            }
+        }
+
+        function toggleImportedMusic() {
+            const audioEl = document.getElementById('customSongAudio');
+            const label = document.getElementById('musicLabel');
+            const btn = document.getElementById('musicBtn');
+
+            if (!hasCustomSong) {
+                showToast('Importa primero tu archivo .ZIP con tu canción');
+                document.getElementById('zipFileInput').click();
+                return;
+            }
+
+            if (audioEl.paused) {
+                audioEl.volume = 0.85;
+                audioEl.play().then(() => {
+                    isMusicPlaying = true;
+                    btn.classList.add('border-amber-400', 'bg-amber-950/80');
+                    label.textContent = `Sonando: ${customSongName}`;
+                }).catch(() => {});
+            } else {
+                audioEl.pause();
+                isMusicPlaying = false;
+                btn.classList.remove('border-amber-400', 'bg-amber-950/80');
+                label.textContent = `Pausado: ${customSongName}`;
+            }
+        }
+
+        /* =========================================================
+           5. 3D BOOK STATE, PERSISTENT POP-UPS & PARALLAX
+           ========================================================= */
+        let currentSpread = 0;
+        const totalSpreads = 8; // 0 = Cover, 1..7 = Chapters I..VII
+
+        let baseRotX = 21;
+        let baseRotY = 0;
+        let baseScale = 1;
+        let mouseRotX = 0;
+        let mouseRotY = 0;
+
+        const bookStage = document.getElementById('bookStage');
+        const bookSpine = document.getElementById('bookSpine');
+        const centerCrease = document.getElementById('centerCrease');
+
+        const spreadNames = [
+            'Portada del Libro',
+            'Capítulo I • Nuestra historia, mi amorcito',
+            'Capítulo II • Pequeños refugios',
+            'Capítulo III • Nuestro lado más loquito',
+            'Capítulo IV • Tenerte cerquita, mi osita',
+            'Capítulo V • Cuidar mejor este amor',
+            'Capítulo VI • Hoy cumplimos siete meses',
+            'Capítulo VII • Una historia real'
+        ];
+
+        function updateBookTransform() {
+            const rx = baseRotX + mouseRotX;
+            const ry = baseRotY + mouseRotY;
+            bookStage.style.transform = `scale(${baseScale}) rotateX(${rx}deg) rotateY(${ry}deg)`;
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            const normX = (e.clientX / window.innerWidth - 0.5) * 2;
+            const normY = (e.clientY / window.innerHeight - 0.5) * 2;
+            mouseRotY = normX * 9;
+            mouseRotX = -normY * 5;
+            updateBookTransform();
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                const normX = (touch.clientX / window.innerWidth - 0.5) * 2;
+                const normY = (touch.clientY / window.innerHeight - 0.5) * 2;
+                mouseRotY = normX * 9;
+                mouseRotX = -normY * 5;
+                updateBookTransform();
+            }
+        }, { passive: true });
+
+        function setCameraPreset(preset) {
+            ['iso', 'front', 'deep'].forEach(p => {
+                const btn = document.getElementById('camBtn-' + p);
+                if (btn) {
+                    btn.className = (p === preset)
+                        ? 'px-2.5 py-1 rounded-full bg-amber-600/80 text-white font-medium transition'
+                        : 'px-2.5 py-1 rounded-full hover:bg-white/10 transition';
+                }
+            });
+
+            if (preset === 'iso') {
+                baseRotX = 21;
+                baseRotY = 0;
+                baseScale = 1;
+            } else if (preset === 'front') {
+                baseRotX = 5;
+                baseRotY = 0;
+                baseScale = 1.03;
+            } else if (preset === 'deep') {
+                baseRotX = 34;
+                baseRotY = -6;
+                baseScale = 0.96;
+            }
+            updateBookTransform();
+        }
+
+        function goToSpread(index) {
+            if (index < 0 || index >= totalSpreads || index === currentSpread) return;
+            const previousIndex = currentSpread;
+            currentSpread = index;
+
+            playCleanPageTurnSound();
+
+            if (previousIndex === 0 && currentSpread === 1 && hasCustomSong && !isMusicPlaying) {
+                toggleImportedMusic();
+            }
+
+            const allSpreads = document.querySelectorAll('.spread');
+            allSpreads.forEach((el, idx) => {
+                if (idx === previousIndex) {
+                    el.classList.remove('active');
+                    el.classList.add('closing');
+                    setTimeout(() => {
+                        el.classList.remove('closing');
+                    }, 520);
+                } else if (idx === currentSpread) {
+                    el.classList.remove('closing');
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active', 'closing');
+                }
+            });
+
+            bookSpine.style.display = currentSpread === 0 ? 'none' : 'block';
+            centerCrease.style.display = currentSpread === 0 ? 'none' : 'block';
+
+            document.getElementById('pageIndicatorText').textContent = spreadNames[currentSpread];
+            document.getElementById('prevBtn').disabled = (currentSpread === 0);
+            document.getElementById('nextBtn').disabled = (currentSpread === totalSpreads - 1);
+
+            const dots = document.getElementById('spreadDots').children;
+            for (let i = 0; i < dots.length; i++) {
+                dots[i].className = (i === currentSpread)
+                    ? 'w-5 h-2.5 rounded-full bg-amber-400 transition-all'
+                    : 'w-2.5 h-2.5 rounded-full bg-white/30 hover:bg-white/60 transition-all';
+            }
+        }
+
+        function nextSpread() {
+            if (currentSpread < totalSpreads - 1) goToSpread(currentSpread + 1);
+        }
+
+        function prevSpread() {
+            if (currentSpread > 0) goToSpread(currentSpread - 1);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSpread();
+            if (e.key === 'ArrowLeft') prevSpread();
+        });
+
+        /* =========================================================
+           6. LOAD SAVED PHOTOS, CUSTOM BACKGROUNDS & SONG
+           ========================================================= */
+        async function loadSavedContent() {
+            // 1. Load Couple Photos 1 to 7
+            for (let i = 1; i <= 7; i++) {
+                const key = 'photo' + i;
+                const imgEl = document.getElementById('img-' + key);
+                if (!imgEl) continue;
+
+                const savedDbPhoto = await getAssetFromDB(key);
+                if (savedDbPhoto) {
+                    imgEl.src = savedDbPhoto;
+                } else {
+                    tryLocalPathsOrFallback(imgEl, LOCAL_CANDIDATE_PATHS[key], PLACEHOLDER_PHOTOS[key]);
+                }
+            }
+
+            // 2. Load Custom Background Landscapes from IndexedDB if previously uploaded via ZIP
+            for (const slotId of ALL_BG_SLOTS) {
+                const savedBg = await getAssetFromDB(slotId);
+                if (savedBg) {
+                    const bgEl = document.getElementById(slotId);
+                    if (bgEl) bgEl.src = savedBg;
+                }
+            }
+
+            // 3. Load Imported Song from IndexedDB or local folder ("POP UP/Moments.mp3")
+            const savedSongBlob = await getAssetFromDB('customSongBlob');
+            const savedSongName = await getAssetFromDB('customSongName');
+            if (savedSongBlob) {
+                setupCustomSongFromBlob(savedSongBlob, savedSongName || 'Moments.mp3', false);
+            } else {
+                const testAudio = new Audio();
+                testAudio.src = 'POP UP/Moments.mp3';
+                testAudio.addEventListener('canplaythrough', () => {
+                    setupCustomSongFromBlob('POP UP/Moments.mp3', 'Moments.mp3', false);
+                }, { once: true });
+            }
+        }
+
+        function tryLocalPathsOrFallback(imgEl, candidatePaths, fallbackDataUri) {
+            let idx = 0;
+            function attemptNext() {
+                if (idx >= candidatePaths.length) {
+                    imgEl.src = fallbackDataUri;
+                    return;
+                }
+                const testImg = new Image();
+                const path = candidatePaths[idx++];
+                testImg.onload = () => {
+                    imgEl.src = path;
+                };
+                testImg.onerror = () => {
+                    attemptNext();
+                };
+                testImg.src = path;
+            }
+            attemptNext();
+        }
+
+        function openLoveLetterModal() {
+            playCleanPageTurnSound();
+            const modal = document.getElementById('loveLetterModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeLoveLetterModal() {
+            const modal = document.getElementById('loveLetterModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        /* =========================================================
+           7. GOLDEN FIREFLIES & STARDUST BACKGROUND
+           ========================================================= */
+        function initFireflies() {
+            const canvas = document.getElementById('fireflyCanvas');
+            const ctx = canvas.getContext('2d');
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            window.addEventListener('resize', () => {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            });
+
+            const particles = Array.from({ length: 50 }, () => ({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                r: Math.random() * 2.0 + 0.8,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: -Math.random() * 0.4 - 0.1,
+                alpha: Math.random() * 0.65 + 0.2,
+                phase: Math.random() * Math.PI * 2
+            }));
+
+            function render() {
+                ctx.clearRect(0, 0, width, height);
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.phase += 0.025;
+                    if (p.y < -10) p.y = height + 10;
+                    if (p.x < -10) p.x = width + 10;
+                    if (p.x > width + 10) p.x = -10;
+
+                    const glowAlpha = p.alpha * (0.6 + 0.4 * Math.sin(p.phase));
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(253, 224, 71, ${glowAlpha})`;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#fbbf24';
+                    ctx.fill();
+                });
+                requestAnimationFrame(render);
+            }
+            render();
+        }
+
+        window.onload = function() {
+            loadSavedContent();
+            updateBookTransform();
+            initFireflies();
+        };
+    </script>
+</body>
+</html>
